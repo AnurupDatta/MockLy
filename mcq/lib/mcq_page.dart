@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:mcq/generate_mcq.dart';
 import 'dart:convert';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'dart:io';
@@ -172,6 +173,22 @@ class _McqPageState extends State<McqPage> {
     });
   }
 
+ 
+
+  void _navigateToPracticeMCQ() {
+     Navigator.of(context).pop(); // Close the drawer
+     Navigator.of(context).push(
+     MaterialPageRoute(builder: (context) => const McqPage()),
+  );
+  }
+
+  void _navigateToGenerateMCQ() {
+  Navigator.of(context).pop(); // Close the drawer
+  Navigator.of(context).push(
+    MaterialPageRoute(builder: (context) => const GenerateMcq()),
+  );
+}
+
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -204,7 +221,61 @@ class _McqPageState extends State<McqPage> {
         ),
       ),
       child: Scaffold(
+        drawer: Drawer(
+          backgroundColor: AppTheme.cardBackground,
+          child: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                DrawerHeader(
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryRed.withOpacity(0.1),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Menu',
+                      style: TextStyle(
+                        color: AppTheme.primaryRed,
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(Icons.create, color: AppTheme.primaryRed),
+                  title: Text(
+                    'Generate MCQ',
+                    style: TextStyle(
+                      color: AppTheme.textLight,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: _navigateToGenerateMCQ,
+                ),
+                ListTile(
+                  leading: Icon(Icons.quiz, color: AppTheme.primaryRed),
+                  title: Text(
+                    'Practice MCQ',
+                    style: TextStyle(
+                      color: AppTheme.textLight,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: _navigateToPracticeMCQ,
+                ),
+              ],
+            ),
+          ),
+        ),
         appBar: AppBar(
+          leading: Builder(
+            builder:
+                (context) => IconButton(
+                  icon: const Icon(Icons.menu, color: AppTheme.textLight),
+                  onPressed: () => Scaffold.of(context).openDrawer(),
+                ),
+          ),
           title: const Text(
             'PDF MCQ Generator',
             style: TextStyle(
@@ -217,211 +288,212 @@ class _McqPageState extends State<McqPage> {
           elevation: 0,
           centerTitle: true,
         ),
-        body: _isLoading
-            ? Container(
-                color: AppTheme.darkBackground,
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      CircularProgressIndicator(
-                        color: AppTheme.primaryRed,
-                        strokeWidth: 3,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        'Processing your PDF...',
-                        style: TextStyle(
-                          color: AppTheme.textLight,
-                          fontSize: 16,
+        body:
+            _isLoading
+                ? Container(
+                  color: AppTheme.darkBackground,
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(
+                          color: AppTheme.primaryRed,
+                          strokeWidth: 3,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
-            : Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      AppTheme.darkBackground,
-                      AppTheme.darkBackground.withOpacity(0.95),
-                    ],
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardBackground,
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.primaryRed.withOpacity(0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: ElevatedButton.icon(
-                          onPressed: _pickPDF,
-                          icon: const Icon(Icons.upload_file, size: 28),
-                          label: const Text(
-                            'Upload PDF',
-                            style: TextStyle(fontSize: 18),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 32,
-                              vertical: 16,
-                            ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Processing your PDF...',
+                          style: TextStyle(
+                            color: AppTheme.textLight,
+                            fontSize: 16,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      if (_fileName.isNotEmpty) ...[
+                      ],
+                    ),
+                  ),
+                )
+                : Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        AppTheme.darkBackground,
+                        AppTheme.darkBackground.withOpacity(0.95),
+                      ],
+                    ),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
                         Container(
-                          padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: AppTheme.cardBackground,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: AppTheme.primaryRed.withOpacity(0.3),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(
-                                Icons.description,
-                                color: AppTheme.primaryRed,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Text(
-                                  _fileName,
-                                  style: const TextStyle(
-                                    color: AppTheme.textLight,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryRed.withOpacity(0.2),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
                               ),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                      if (_questions.isNotEmpty) ...[
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.cardBackground,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                _buildActionButton(
-                                  'Shuffle Questions',
-                                  Icons.shuffle,
-                                  _shuffleQuestions,
-                                ),
-                                const SizedBox(width: 12),
-                                _buildActionButton(
-                                  'Calculate Score',
-                                  Icons.calculate,
-                                  _calculateScore,
-                                ),
-                                const SizedBox(width: 12),
-                                _buildActionButton(
-                                  'Reattempt Quiz',
-                                  Icons.refresh,
-                                  _resetQuiz,
-                                ),
-                              ],
+                          child: ElevatedButton.icon(
+                            onPressed: _pickPDF,
+                            icon: const Icon(Icons.upload_file, size: 28),
+                            label: const Text(
+                              'Upload PDF',
+                              style: TextStyle(fontSize: 18),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                                vertical: 16,
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-                        if (_showScore)
+                        const SizedBox(height: 24),
+                        if (_fileName.isNotEmpty) ...[
                           Container(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryRed.withOpacity(0.1),
+                              color: AppTheme.cardBackground,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: AppTheme.primaryRed.withOpacity(0.3),
                               ),
                             ),
                             child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const Icon(
-                                  Icons.emoji_events,
+                                  Icons.description,
                                   color: AppTheme.primaryRed,
-                                  size: 28,
                                 ),
                                 const SizedBox(width: 12),
-                                Text(
-                                  'Your Score: $_score / ${_questions.length}',
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppTheme.textLight,
+                                Expanded(
+                                  child: Text(
+                                    _fileName,
+                                    style: const TextStyle(
+                                      color: AppTheme.textLight,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: ListView.builder(
-                            itemCount: _questions.length,
-                            itemBuilder: (context, index) {
-                              return MCQCard(
-                                question: _questions[index],
-                                questionNumber: index + 1,
-                                showCorrectness: _showScore,
-                              );
-                            },
-                          ),
-                        ),
-                      ] else if (_fileName.isNotEmpty) ...[
-                        Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.hourglass_empty,
-                                size: 64,
-                                color: AppTheme.textGrey,
+                          const SizedBox(height: 24),
+                        ],
+                        if (_questions.isNotEmpty) ...[
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.cardBackground,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  _buildActionButton(
+                                    'Shuffle Questions',
+                                    Icons.shuffle,
+                                    _shuffleQuestions,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildActionButton(
+                                    'Calculate Score',
+                                    Icons.calculate,
+                                    _calculateScore,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildActionButton(
+                                    'Reattempt Quiz',
+                                    Icons.refresh,
+                                    _resetQuiz,
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 16),
-                              Text(
-                                'No MCQs generated yet.\nPlease wait or try another PDF.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: AppTheme.textGrey,
-                                  fontSize: 16,
-                                  fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          if (_showScore)
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryRed.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppTheme.primaryRed.withOpacity(0.3),
                                 ),
                               ),
-                            ],
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.emoji_events,
+                                    color: AppTheme.primaryRed,
+                                    size: 28,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'Your Score: $_score / ${_questions.length}',
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.textLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: _questions.length,
+                              itemBuilder: (context, index) {
+                                return MCQCard(
+                                  question: _questions[index],
+                                  questionNumber: index + 1,
+                                  showCorrectness: _showScore,
+                                );
+                              },
+                            ),
                           ),
-                        ),
+                        ] else if (_fileName.isNotEmpty) ...[
+                          Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.hourglass_empty,
+                                  size: 64,
+                                  color: AppTheme.textGrey,
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'No MCQs generated yet.\nPlease wait or try another PDF.',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppTheme.textGrey,
+                                    fontSize: 16,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
-              ),
       ),
     );
   }
@@ -439,10 +511,7 @@ class _McqPageState extends State<McqPage> {
         backgroundColor: AppTheme.cardBackground,
         foregroundColor: AppTheme.textLight,
         elevation: 2,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
   }
@@ -496,9 +565,7 @@ class _MCQCardState extends State<MCQCard> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: AppTheme.primaryRed.withOpacity(0.2),
-          ),
+          border: Border.all(color: AppTheme.primaryRed.withOpacity(0.2)),
         ),
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -546,51 +613,56 @@ class _MCQCardState extends State<MCQCard> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: widget.showCorrectness
-                          ? (isCorrect
-                              ? AppTheme.primaryRed
+                      color:
+                          widget.showCorrectness
+                              ? (isCorrect
+                                  ? AppTheme.primaryRed
+                                  : (isSelected
+                                      ? Colors.red.withOpacity(0.5)
+                                      : AppTheme.textGrey.withOpacity(0.3)))
                               : (isSelected
-                                  ? Colors.red.withOpacity(0.5)
-                                  : AppTheme.textGrey.withOpacity(0.3)))
-                          : (isSelected
-                              ? AppTheme.primaryRed
-                              : AppTheme.textGrey.withOpacity(0.3)),
+                                  ? AppTheme.primaryRed
+                                  : AppTheme.textGrey.withOpacity(0.3)),
                     ),
-                    color: widget.showCorrectness
-                        ? (isCorrect
-                            ? AppTheme.primaryRed.withOpacity(0.1)
+                    color:
+                        widget.showCorrectness
+                            ? (isCorrect
+                                ? AppTheme.primaryRed.withOpacity(0.1)
+                                : (isSelected
+                                    ? Colors.red.withOpacity(0.1)
+                                    : AppTheme.cardBackground))
                             : (isSelected
-                                ? Colors.red.withOpacity(0.1)
-                                : AppTheme.cardBackground))
-                        : (isSelected
-                            ? AppTheme.primaryRed.withOpacity(0.1)
-                            : AppTheme.cardBackground),
+                                ? AppTheme.primaryRed.withOpacity(0.1)
+                                : AppTheme.cardBackground),
                   ),
                   child: RadioListTile<String>(
                     title: Text(
                       option,
                       style: TextStyle(
-                        color: widget.showCorrectness
-                            ? (isCorrect
-                                ? AppTheme.primaryRed
-                                : (isSelected
-                                    ? Colors.red
-                                    : AppTheme.textLight))
-                            : AppTheme.textLight,
-                        fontWeight: isSelected || isCorrect
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+                        color:
+                            widget.showCorrectness
+                                ? (isCorrect
+                                    ? AppTheme.primaryRed
+                                    : (isSelected
+                                        ? Colors.red
+                                        : AppTheme.textLight))
+                                : AppTheme.textLight,
+                        fontWeight:
+                            isSelected || isCorrect
+                                ? FontWeight.bold
+                                : FontWeight.normal,
                       ),
                     ),
                     value: option,
                     groupValue: widget.question.selectedAnswer,
-                    onChanged: widget.showCorrectness
-                        ? null
-                        : (value) {
-                            setState(() {
-                              widget.question.selectedAnswer = value;
-                            });
-                          },
+                    onChanged:
+                        widget.showCorrectness
+                            ? null
+                            : (value) {
+                              setState(() {
+                                widget.question.selectedAnswer = value;
+                              });
+                            },
                     activeColor: AppTheme.primaryRed,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
