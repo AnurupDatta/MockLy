@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:mcq/generate_mcq.dart';
+import 'package:mcq/saved_mcq.dart';
 import 'dart:convert';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Custom theme colors
 class AppTheme {
@@ -54,9 +56,38 @@ class _McqPageState extends State<McqPage> {
         await _generateMCQs();
       }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Error: ${e.toString()}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFE63946),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     } finally {
       setState(() {
         _isLoading = false;
@@ -142,9 +173,38 @@ class _McqPageState extends State<McqPage> {
         throw Exception('Failed to generate MCQs: ${response.statusCode}');
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error generating MCQs: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  color: Colors.white,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Error generating MCQs: ${e.toString()}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFE63946),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -173,21 +233,218 @@ class _McqPageState extends State<McqPage> {
     });
   }
 
- 
+  Future<void> _saveCurrentMcqs() async {
+    if (_questions.isEmpty) return;
+    final titleController = TextEditingController();
+    String? errorText;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: const Color(0xFF2D2D2D),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: const Color(0xFFE63946).withOpacity(0.1),
+              width: 1,
+            ),
+          ),
+          title: const Text(
+            'Save MCQs',
+            style: TextStyle(
+              color: Color(0xFFF1F1F1),
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                controller: titleController,
+                style: const TextStyle(
+                  color: Color(0xFFF1F1F1),
+                  fontSize: 16,
+                ),
+                decoration: InputDecoration(
+                  labelText: 'Enter a title for this MCQ set',
+                  labelStyle: const TextStyle(
+                    color: Color(0xFFB0B0B0),
+                  ),
+                  errorText: errorText,
+                  errorStyle: const TextStyle(
+                    color: Color(0xFFE63946),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(
+                      color: const Color(0xFFE63946).withOpacity(0.3),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFE63946),
+                    ),
+                  ),
+                  errorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFE63946),
+                    ),
+                  ),
+                  focusedErrorBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(
+                      color: Color(0xFFE63946),
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: const Color(0xFF1A1A1A),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    errorText = value.trim().isEmpty ? 'Title cannot be empty' : null;
+                  });
+                },
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${_questions.length} MCQs will be saved',
+                style: const TextStyle(
+                  color: Color(0xFFB0B0B0),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: const Text(
+                'Cancel',
+                style: TextStyle(
+                  color: Color(0xFFB0B0B0),
+                ),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final title = titleController.text.trim();
+                if (title.isEmpty) {
+                  setState(() {
+                    errorText = 'Title cannot be empty';
+                  });
+                  return;
+                }
+                Navigator.pop(context, title);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE63946),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    final title = result;
+    if (title == null || title.isEmpty) return;
+
+    // Convert MCQQuestion to Mcq model
+    final mcqs = _questions.map((q) => {
+      'question': q.question,
+      'options': q.options,
+      'correctIndex': q.options.indexOf(q.correctAnswer),
+    }).toList();
+
+    final mcqSet = {'title': title, 'mcqs': mcqs};
+    
+    // Debug logging
+    print('Saving MCQ set:');
+    print('Title: $title');
+    print('Number of MCQs: ${mcqs.length}');
+    print('First MCQ: ${mcqs.first}');
+
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> saved = prefs.getStringList('saved_mcq_sets') ?? [];
+    saved.add(jsonEncode(mcqSet));
+    await prefs.setStringList('saved_mcq_sets', saved);
+
+    // Debug print to verify saving
+    print('Current saved MCQ sets: ${saved.length}');
+    print('Latest saved set: ${saved.last}');
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(
+                Icons.check_circle,
+                color: Colors.white,
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'MCQs saved successfully!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFFE63946),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'View',
+            textColor: Colors.white,
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const SavedMcq(),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    }
+  }
 
   void _navigateToPracticeMCQ() {
-     Navigator.of(context).pop(); // Close the drawer
-     Navigator.of(context).push(
-     MaterialPageRoute(builder: (context) => const McqPage()),
-  );
+    Navigator.of(context).pop(); // Close the drawer
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const McqPage()));
   }
 
   void _navigateToGenerateMCQ() {
-  Navigator.of(context).pop(); // Close the drawer
-  Navigator.of(context).push(
-    MaterialPageRoute(builder: (context) => const GenerateMcq()),
-  );
-}
+    Navigator.of(context).pop(); // Close the drawer
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const GenerateMcq()));
+  }
+
+  void _navigateToSavedMCQ() {
+    Navigator.of(context).pop(); // Close the drawer
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const SavedMcq()));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -263,6 +520,17 @@ class _McqPageState extends State<McqPage> {
                     ),
                   ),
                   onTap: _navigateToPracticeMCQ,
+                ),
+                ListTile(
+                  leading: Icon(Icons.save, color: AppTheme.primaryRed),
+                  title: Text(
+                    'Saved MCQs',
+                    style: TextStyle(
+                      color: AppTheme.textLight,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: _navigateToSavedMCQ,
                 ),
               ],
             ),
@@ -417,6 +685,26 @@ class _McqPageState extends State<McqPage> {
                                     'Reattempt Quiz',
                                     Icons.refresh,
                                     _resetQuiz,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  ElevatedButton.icon(
+                                    onPressed: () async {
+                                      await _saveCurrentMcqs();
+                                    },
+                                    icon: const Icon(Icons.save),
+                                    label: const Text('Save MCQs'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppTheme.primaryRed,
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 4,
+                                    ),
                                   ),
                                 ],
                               ),
