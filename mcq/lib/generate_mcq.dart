@@ -4,6 +4,8 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:mcq/saved_notes.dart';
 
 // Use the same theme as mcq_page.dart
 class AppTheme {
@@ -145,6 +147,183 @@ class _GenerateMcqState extends State<GenerateMcq> {
     }
   }
 
+  Future<void> _saveCurrentMcqsToNotes() async {
+    if (_questions.isEmpty) return;
+    final titleController = TextEditingController();
+    String? errorText;
+
+    final result = await showDialog<String>(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  backgroundColor: const Color(0xFF2D2D2D),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: const Color(0xFFE63946).withOpacity(0.1),
+                      width: 1,
+                    ),
+                  ),
+                  title: const Text(
+                    'Save MCQs as Notes',
+                    style: TextStyle(
+                      color: Color(0xFFF1F1F1),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        style: const TextStyle(
+                          color: Color(0xFFF1F1F1),
+                          fontSize: 16,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Enter a title for this MCQ note',
+                          labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
+                          errorText: errorText,
+                          errorStyle: const TextStyle(color: Color(0xFFE63946)),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: const Color(0xFFE63946).withOpacity(0.3),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE63946),
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE63946),
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE63946),
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFF1A1A1A),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            errorText =
+                                value.trim().isEmpty
+                                    ? 'Title cannot be empty'
+                                    : null;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${_questions.length} MCQs will be saved as notes',
+                        style: const TextStyle(
+                          color: Color(0xFFB0B0B0),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, null),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Color(0xFFB0B0B0)),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        final title = titleController.text.trim();
+                        if (title.isEmpty) {
+                          setState(() {
+                            errorText = 'Title cannot be empty';
+                          });
+                          return;
+                        }
+                        Navigator.pop(context, title);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE63946),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
+          ),
+    );
+
+    final title = result;
+    if (title == null || title.isEmpty) return;
+
+    final mcqs =
+        _questions
+            .map(
+              (q) => {
+                'question': q.question,
+                'options': q.options,
+                'correctIndex': q.options.indexOf(q.correctAnswer),
+              },
+            )
+            .toList();
+
+    final mcqSet = {'title': title, 'mcqs': mcqs};
+
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> saved =
+        prefs.getStringList('saved_notes_mcq_sets') ?? [];
+    saved.add(jsonEncode(mcqSet));
+    await prefs.setStringList('saved_notes_mcq_sets', saved);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
+              const SizedBox(width: 12),
+              const Text(
+                'MCQs saved to notes!',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFFE63946),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+          action: SnackBarAction(
+            label: 'View',
+            textColor: Colors.white,
+            onPressed: () {
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SavedNotes()));
+            },
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Theme(
@@ -248,7 +427,10 @@ class _GenerateMcqState extends State<GenerateMcq> {
                           ),
                           child: ElevatedButton.icon(
                             onPressed: _pickPDF,
-                            icon: const Icon(Icons.add_circle_outline, size: 28),
+                            icon: const Icon(
+                              Icons.add_circle_outline,
+                              size: 28,
+                            ),
                             label: const Text(
                               'Create New MCQ Set',
                               style: TextStyle(
@@ -262,7 +444,9 @@ class _GenerateMcqState extends State<GenerateMcq> {
                                 horizontal: 32,
                                 vertical: 20,
                               ),
-                              backgroundColor: AppTheme.primaryRed.withOpacity(0.9),
+                              backgroundColor: AppTheme.primaryRed.withOpacity(
+                                0.9,
+                              ),
                               foregroundColor: Colors.white,
                               elevation: 6,
                               shadowColor: AppTheme.primaryRed.withOpacity(0.3),
@@ -309,6 +493,29 @@ class _GenerateMcqState extends State<GenerateMcq> {
                           const SizedBox(height: 24),
                         ],
                         if (_questions.isNotEmpty) ...[
+                          Row(
+                            children: [
+                              Expanded(child: Container()),
+                              ElevatedButton.icon(
+                                onPressed: _saveCurrentMcqsToNotes,
+                                icon: const Icon(Icons.save),
+                                label: const Text('Save as Notes'),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryRed,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 4,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
                           Expanded(
                             child: ListView.builder(
                               itemCount: _questions.length,

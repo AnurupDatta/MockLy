@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:mcq/generate_mcq.dart';
 import 'package:mcq/saved_mcq.dart';
+import 'package:mcq/saved_notes.dart';
 import 'dart:convert';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'dart:io';
@@ -445,6 +446,12 @@ class _McqPageState extends State<McqPage> {
       context,
     ).push(MaterialPageRoute(builder: (context) => const SavedMcq()));
   }
+   void _navigateToMCQnotes() {
+    Navigator.of(context).pop(); // Close the drawer
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (context) => const SavedNotes()));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -524,13 +531,24 @@ class _McqPageState extends State<McqPage> {
                 ListTile(
                   leading: Icon(Icons.save, color: AppTheme.primaryRed),
                   title: Text(
-                    'Saved MCQs',
+                    'Saved MCQs for Practice',
                     style: TextStyle(
                       color: AppTheme.textLight,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   onTap: _navigateToSavedMCQ,
+                ),
+                ListTile(
+                  leading: Icon(Icons.save, color: AppTheme.primaryRed),
+                  title: Text(
+                    'Saved MCQs for Notes',
+                    style: TextStyle(
+                      color: AppTheme.textLight,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: _navigateToMCQnotes,
                 ),
               ],
             ),
