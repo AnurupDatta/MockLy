@@ -62,19 +62,12 @@ class _McqPageState extends State<McqPage> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Error: ${e.toString()}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ],
@@ -179,19 +172,12 @@ class _McqPageState extends State<McqPage> {
           SnackBar(
             content: Row(
               children: [
-                const Icon(
-                  Icons.error_outline,
-                  color: Colors.white,
-                  size: 20,
-                ),
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Error generating MCQs: ${e.toString()}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ],
@@ -241,133 +227,137 @@ class _McqPageState extends State<McqPage> {
 
     final result = await showDialog<String>(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          backgroundColor: const Color(0xFF2D2D2D),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: const Color(0xFFE63946).withOpacity(0.1),
-              width: 1,
-            ),
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => AlertDialog(
+                  backgroundColor: const Color(0xFF2D2D2D),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    side: BorderSide(
+                      color: const Color(0xFFE63946).withOpacity(0.1),
+                      width: 1,
+                    ),
+                  ),
+                  title: const Text(
+                    'Save MCQs',
+                    style: TextStyle(
+                      color: Color(0xFFF1F1F1),
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        style: const TextStyle(
+                          color: Color(0xFFF1F1F1),
+                          fontSize: 16,
+                        ),
+                        decoration: InputDecoration(
+                          labelText: 'Enter a title for this MCQ set',
+                          labelStyle: const TextStyle(color: Color(0xFFB0B0B0)),
+                          errorText: errorText,
+                          errorStyle: const TextStyle(color: Color(0xFFE63946)),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(
+                              color: const Color(0xFFE63946).withOpacity(0.3),
+                            ),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE63946),
+                            ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE63946),
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFE63946),
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFF1A1A1A),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            errorText =
+                                value.trim().isEmpty
+                                    ? 'Title cannot be empty'
+                                    : null;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${_questions.length} MCQs will be saved',
+                        style: const TextStyle(
+                          color: Color(0xFFB0B0B0),
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, null),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(color: Color(0xFFB0B0B0)),
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        final title = titleController.text.trim();
+                        if (title.isEmpty) {
+                          setState(() {
+                            errorText = 'Title cannot be empty';
+                          });
+                          return;
+                        }
+                        Navigator.pop(context, title);
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFE63946),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Save'),
+                    ),
+                  ],
+                ),
           ),
-          title: const Text(
-            'Save MCQs',
-            style: TextStyle(
-              color: Color(0xFFF1F1F1),
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              TextField(
-                controller: titleController,
-                style: const TextStyle(
-                  color: Color(0xFFF1F1F1),
-                  fontSize: 16,
-                ),
-                decoration: InputDecoration(
-                  labelText: 'Enter a title for this MCQ set',
-                  labelStyle: const TextStyle(
-                    color: Color(0xFFB0B0B0),
-                  ),
-                  errorText: errorText,
-                  errorStyle: const TextStyle(
-                    color: Color(0xFFE63946),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: const Color(0xFFE63946).withOpacity(0.3),
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFE63946),
-                    ),
-                  ),
-                  errorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFE63946),
-                    ),
-                  ),
-                  focusedErrorBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(
-                      color: Color(0xFFE63946),
-                    ),
-                  ),
-                  filled: true,
-                  fillColor: const Color(0xFF1A1A1A),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    errorText = value.trim().isEmpty ? 'Title cannot be empty' : null;
-                  });
-                },
-              ),
-              const SizedBox(height: 8),
-              Text(
-                '${_questions.length} MCQs will be saved',
-                style: const TextStyle(
-                  color: Color(0xFFB0B0B0),
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, null),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  color: Color(0xFFB0B0B0),
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final title = titleController.text.trim();
-                if (title.isEmpty) {
-                  setState(() {
-                    errorText = 'Title cannot be empty';
-                  });
-                  return;
-                }
-                Navigator.pop(context, title);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE63946),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text('Save'),
-            ),
-          ],
-        ),
-      ),
     );
 
     final title = result;
     if (title == null || title.isEmpty) return;
 
     // Convert MCQQuestion to Mcq model
-    final mcqs = _questions.map((q) => {
-      'question': q.question,
-      'options': q.options,
-      'correctIndex': q.options.indexOf(q.correctAnswer),
-    }).toList();
+    final mcqs =
+        _questions
+            .map(
+              (q) => {
+                'question': q.question,
+                'options': q.options,
+                'correctIndex': q.options.indexOf(q.correctAnswer),
+              },
+            )
+            .toList();
 
     final mcqSet = {'title': title, 'mcqs': mcqs};
-    
+
     // Debug logging
     print('Saving MCQ set:');
     print('Title: $title');
@@ -388,18 +378,11 @@ class _McqPageState extends State<McqPage> {
         SnackBar(
           content: Row(
             children: [
-              const Icon(
-                Icons.check_circle,
-                color: Colors.white,
-                size: 20,
-              ),
+              const Icon(Icons.check_circle, color: Colors.white, size: 20),
               const SizedBox(width: 12),
               const Text(
                 'MCQs saved successfully!',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
           ),
@@ -414,11 +397,9 @@ class _McqPageState extends State<McqPage> {
             label: 'View',
             textColor: Colors.white,
             onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const SavedMcq(),
-                ),
-              );
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => const SavedMcq()));
             },
           ),
         ),
@@ -446,7 +427,8 @@ class _McqPageState extends State<McqPage> {
       context,
     ).push(MaterialPageRoute(builder: (context) => const SavedMcq()));
   }
-   void _navigateToMCQnotes() {
+
+  void _navigateToMCQnotes() {
     Navigator.of(context).pop(); // Close the drawer
     Navigator.of(
       context,
@@ -563,7 +545,7 @@ class _McqPageState extends State<McqPage> {
                 ),
           ),
           title: const Text(
-            'PDF MCQ Generator',
+            'Mockly',
             style: TextStyle(
               color: AppTheme.textLight,
               fontWeight: FontWeight.bold,
@@ -954,9 +936,9 @@ class _MCQCardState extends State<MCQCard> {
                                         : AppTheme.textLight))
                                 : AppTheme.textLight,
                         fontWeight:
-                            isSelected || isCorrect
+                            isSelected
                                 ? FontWeight.bold
-                                : FontWeight.normal,
+                                : FontWeight.normal, // Only selected is bold
                       ),
                     ),
                     value: option,

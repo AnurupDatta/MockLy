@@ -320,9 +320,9 @@ class _SavedMcqState extends State<SavedMcq> {
                             ],
                           ),
                         ),
-                      ),
+                      )
                     );
-                  },
+                    },
                 ),
               ),
       ),
@@ -628,9 +628,9 @@ class _McqPracticePageState extends State<McqPracticePage> {
                                                       : const Color(0xFFF1F1F1)))
                                               : const Color(0xFFF1F1F1),
                                       fontWeight:
-                                          isSelected || isCorrect
+                                          isSelected
                                               ? FontWeight.bold
-                                              : FontWeight.normal,
+                                              : FontWeight.normal, // Only selected is bold
                                     ),
                                   ),
                                   activeColor: const Color(0xFFE63946),
