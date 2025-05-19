@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 // Custom theme colors
 class AppTheme {
@@ -33,6 +34,18 @@ class _McqPageState extends State<McqPage> {
   List<MCQQuestion> _questions = [];
   int _score = 0;
   bool _showScore = false;
+  User? _user;
+
+  @override
+  void initState() {
+    super.initState();
+    _user = FirebaseAuth.instance.currentUser;
+    FirebaseAuth.instance.authStateChanges().listen((user) {
+      setState(() {
+        _user = user;
+      });
+    });
+  }
 
   Future<void> _pickPDF() async {
     setState(() {
@@ -473,18 +486,46 @@ class _McqPageState extends State<McqPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                DrawerHeader(
+                // Profile section at the top, horizontal and left-aligned
+                Container(
                   decoration: BoxDecoration(
                     color: AppTheme.primaryRed.withOpacity(0.1),
                   ),
-                  child: Center(
-                    child: Text(
-                      'Menu',
-                      style: TextStyle(
-                        color: AppTheme.primaryRed,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 20,
+                    horizontal: 16,
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      _buildProfileAvatar(),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _user?.email ?? '',
+                          style: const TextStyle(
+                            color: AppTheme.textLight,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
+                    ],
+                  ),
+                ),
+                // MockLy text left-aligned
+                Container(
+                  width: double.infinity,
+                  color: AppTheme.primaryRed.withOpacity(0.1),
+                  padding: const EdgeInsets.only(left: 24, top: 12, bottom: 12),
+                  alignment: Alignment.centerLeft,
+                  child: const Text(
+                    'MockLy',
+                    style: TextStyle(
+                      color: AppTheme.primaryRed,
+                      fontSize: 25,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
@@ -532,6 +573,65 @@ class _McqPageState extends State<McqPage> {
                   ),
                   onTap: _navigateToMCQnotes,
                 ),
+                // Add logout option
+                const Divider(color: AppTheme.textGrey, height: 32),
+                ListTile(
+                  leading: const Icon(Icons.logout, color: AppTheme.primaryRed),
+                  title: const Text(
+                    'Log Out',
+                    style: TextStyle(
+                      color: AppTheme.textLight,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () async {
+                    final shouldLogout = await showDialog<bool>(
+                      context: context,
+                      builder:
+                          (context) => AlertDialog(
+                            backgroundColor: AppTheme.cardBackground,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            title: const Text(
+                              'Log Out',
+                              style: TextStyle(color: AppTheme.primaryRed),
+                            ),
+                            content: const Text(
+                              'Are you sure you want to log out?',
+                              style: TextStyle(color: AppTheme.textLight),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed:
+                                    () => Navigator.of(context).pop(false),
+                                child: const Text(
+                                  'Cancel',
+                                  style: TextStyle(color: AppTheme.textGrey),
+                                ),
+                              ),
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryRed,
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed:
+                                    () => Navigator.of(context).pop(true),
+                                child: const Text('Log Out'),
+                              ),
+                            ],
+                          ),
+                    );
+                    if (shouldLogout == true) {
+                      await FirebaseAuth.instance.signOut();
+                      if (mounted) {
+                        Navigator.of(
+                          context,
+                        ).pushNamedAndRemoveUntil('/login', (route) => false);
+                      }
+                    }
+                  },
+                ),
               ],
             ),
           ),
@@ -545,7 +645,7 @@ class _McqPageState extends State<McqPage> {
                 ),
           ),
           title: const Text(
-            'Mockly',
+            'MockLy',
             style: TextStyle(
               color: AppTheme.textLight,
               fontWeight: FontWeight.bold,
@@ -555,6 +655,12 @@ class _McqPageState extends State<McqPage> {
           backgroundColor: AppTheme.cardBackground,
           elevation: 0,
           centerTitle: true,
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 12.0),
+              child: _buildProfileAvatar(small: true),
+            ),
+          ],
         ),
         body:
             _isLoading
@@ -802,6 +908,29 @@ class _McqPageState extends State<McqPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
     );
+  }
+
+  // Add a 'small' parameter for AppBar avatar
+  Widget _buildProfileAvatar({bool small = false}) {
+    final photoUrl = _user?.photoURL;
+    final double radius = small ? 18 : 28;
+    if (photoUrl != null && photoUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundImage: NetworkImage(photoUrl),
+        backgroundColor: Colors.transparent,
+      );
+    } else {
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: AppTheme.textGrey,
+        child: Icon(
+          Icons.person,
+          color: AppTheme.cardBackground,
+          size: small ? 20 : 32,
+        ),
+      );
+    }
   }
 }
 

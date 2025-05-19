@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1031541122446",
+    "project_id": "mockly-9d312",
+    "storage_bucket": "mockly-9d312.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1031541122446:android:8e6379d75bf10a94c1b0df",
+        "android_client_info": {
+          "package_name": "com.example.mcq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDMLVV9OEK7ii3djB98JkM_RnRr8KRe2fE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
