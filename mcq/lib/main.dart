@@ -34,6 +34,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// Add this widget to handle auto-login
 class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
