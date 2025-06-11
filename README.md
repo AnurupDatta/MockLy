@@ -1,6 +1,4 @@
-Good [morning/afternoon/evening], everyone.
-
-My name is Anurup Datta, and I stand before you today not just as a student, but as the founder of MockLy — an initiative born out of a very real problem that most of us have faced:
+MockLy — an initiative born out of a very real problem that most of us have faced:
 
 The lack of accessible, customizable, and practical mock test platforms.
 
