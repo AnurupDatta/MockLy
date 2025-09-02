@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
@@ -98,7 +99,7 @@ class _GenerateMcqState extends State<GenerateMcq> {
     try {
       final response = await http.post(
         Uri.parse(
-          'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyBEh_qsPZ7P0RwSsz6q1U7THmyyzLAJw70',
+          'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${dotenv.env['GEMINI_API_KEY']}',
         ),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({

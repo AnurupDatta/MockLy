@@ -1,13 +1,15 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:mcq/firebase_options.dart';
 import 'package:mcq/mcq_page.dart';
 import 'package:mcq/authentication/log_in.dart';
 import 'package:mcq/authentication/sign_up.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // <-- Add this line
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
